@@ -63,17 +63,20 @@
 
 <script>
 // =====================
-// REAL SHIPMENT INFO
+// DHL SHIPMENT TEMPLATE
 // =====================
-const VALID_TRACKING_NUMBER = "JW45728736789"; // replace with your actual number
+const VALID_TRACKING_NUMBER = "JW4356862536"; // replace with your DHL number
 const SHIPMENT_INFO = {
   carrier: "DHL",
-  logo: "YOUR_LOGO_URL", // optional
+  logo: "https://upload.wikimedia.org/wikipedia/commons/d/d4/DHL_Express_logo.svg",
   status: "Shipped",
-  estimated_delivery: "2025-09-07",
+  estimated_delivery: "2025-09-09",
+  product_type: "10 Gold Bars",
+  receiver_name: "Helen Williams",
+  destination: "Columbia, SC, USA",
   steps: ["Pending", "Shipped", "In Transit", "Out for Delivery", "Delivered"],
   checkpoints: [
-    { time: "2025-09-03 09:00", location: "California, CA", status: "Shipped" },
+    { time: "2025-09-03 09:00", location: "Los Angeles, CA", status: "Shipped" },
 ]
 };
 
@@ -82,7 +85,6 @@ const SHIPMENT_INFO = {
 // =====================
 function trackPackage() {
   const number = document.getElementById("trackingNumber").value.trim();
-  const carrier = document.getElementById("carrier").value;
   const resultDiv = document.getElementById("result");
 
   if (number !== VALID_TRACKING_NUMBER) {
@@ -90,12 +92,18 @@ function trackPackage() {
     return;
   }
 
-  const data = { ...SHIPMENT_INFO, carrier: carrier };
+  const data = SHIPMENT_INFO;
 
-  let html = `<h2>${data.carrier} - ${number}</h2>`;
-  if (data.logo) html = `<h2><img src="${data.logo}" class="logo">${data.carrier} - ${number}</h2>`;
-  html += `<p><strong>Status:</strong> ${data.status}</p>`;
-  html += `<p><strong>Estimated Delivery:</strong> ${data.estimated_delivery}</p>`;
+  let html = `
+    <h2><img src="${data.logo}" class="logo">${data.carrier} - ${number}</h2>
+    <div style="background:#fafafa; border:1px solid #ddd; padding:15px; border-radius:8px; margin-bottom:20px;">
+      <p><strong>Status:</strong> ${data.status}</p>
+      <p><strong>Estimated Delivery:</strong> ${data.estimated_delivery}</p>
+      <p><strong>Product:</strong> ${data.product_type}</p>
+      <p><strong>Receiver:</strong> ${data.receiver_name}</p>
+      <p><strong>Destination:</strong> ${data.destination}</p>
+    </div>
+  `;
 
   // Progress bar
   const currentStepIndex = data.steps.indexOf(data.status);
@@ -127,5 +135,3 @@ function trackPackage() {
 }
 </script>
 
-</body>
-</html>
