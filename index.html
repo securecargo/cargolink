@@ -3,19 +3,39 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fake Package Tracker</title>
+<title>Package Tracker</title>
 <style>
   body { font-family: Arial, sans-serif; background: #f0f2f5; padding: 20px; }
   h1 { text-align: center; margin-bottom: 30px; color: #333; }
   .tracker { max-width: 600px; margin: auto; background: #fff; padding: 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
   input, select, button { padding: 12px; margin: 8px 0; width: 100%; font-size: 16px; border-radius: 6px; border: 1px solid #ccc; }
-  button { cursor: pointer; transition: 0.2s; color: #fff; font-weight: bold; }
+  button { cursor: pointer; transition: 0.2s; color: #fff; font-weight: bold; background: #007bff; }
+  button:hover { background: #0056b3; }
   .result { margin-top: 25px; }
-  .progress { display: flex; justify-content: space-between; margin: 20px 0; }
-  .step { flex: 1; text-align: center; position: relative; }
-  .step:before { content: ''; width: 100%; height: 6px; background: #ddd; position: absolute; top: 18px; left: -50%; z-index: -1; }
-  .step:first-child:before { content: none; }
-  .step-circle { width: 36px; height: 36px; border-radius: 50%; background: #ddd; margin: auto; line-height: 36px; color: #fff; font-weight: bold; }
+  .progress { display: flex; justify-content: space-between; position: relative; margin: 20px 0; }
+  .progress::before {
+    content: '';
+    position: absolute;
+    top: 18px;
+    left: 18px;
+    right: 18px;
+    height: 6px;
+    background: #ddd;
+    z-index: 0;
+  }
+  .progress-fill {
+    content: '';
+    position: absolute;
+    top: 18px;
+    left: 18px;
+    height: 6px;
+    background: #007bff;
+    z-index: 1;
+    width: 0;
+    transition: width 1s ease-in-out;
+  }
+  .step { flex: 1; text-align: center; position: relative; z-index: 2; }
+  .step-circle { width: 36px; height: 36px; border-radius: 50%; background: #ddd; margin: auto; line-height: 36px; color: #fff; font-weight: bold; transition: background 0.5s; }
   .active .step-circle { background: #007bff; }
   .checkpoint { border-bottom: 1px solid #eee; padding: 10px 0; }
   .logo { height: 40px; margin-right: 10px; vertical-align: middle; }
@@ -23,10 +43,10 @@
 </head>
 <body>
 
-<h1>Fake Package Tracker</h1>
+<h1>Package Tracker</h1>
 <div class="tracker">
   <label for="trackingNumber">Tracking Number:</label>
-  <input type="text" id="trackingNumber" placeholder="Enter any number">
+  <input type="text" id="trackingNumber" placeholder="Enter your tracking number">
 
   <label for="carrier">Carrier:</label>
   <select id="carrier">
@@ -42,57 +62,48 @@
 </div>
 
 <script>
-const statuses = ["Pending", "Shipped", "In Transit", "Out for Delivery", "Delivered"];
-const locations = ["New York, NY", "Chicago, IL", "Los Angeles, CA", "Houston, TX", "Miami, FL"];
-const carrierColors = { DHL: "#D40511", FedEx: "#4D148C", UPS: "#351C15", USPS: "#005DAA" };
-const carrierLogos = { 
-  DHL: "https://upload.wikimedia.org/wikipedia/commons/d/d4/DHL_Express_logo.svg",
-  FedEx: "https://upload.wikimedia.org/wikipedia/commons/7/7a/FedEx_Express.svg",
-  UPS: "https://upload.wikimedia.org/wikipedia/commons/4/4e/UPS_Logo_Shield_2017.svg",
-  USPS: "https://upload.wikimedia.org/wikipedia/commons/4/4a/USPS_logo.svg"
+// =====================
+// REAL SHIPMENT INFO
+// =====================
+const VALID_TRACKING_NUMBER = "JW45728736789"; // replace with your actual number
+const SHIPMENT_INFO = {
+  carrier: "DHL",
+  logo: "YOUR_LOGO_URL", // optional
+  status: "Shipped",
+  estimated_delivery: "2025-09-07",
+  steps: ["Pending", "Shipped", "In Transit", "Out for Delivery", "Delivered"],
+  checkpoints: [
+    { time: "2025-09-03 09:00", location: "California, CA", status: "Shipped" },
+    { time: "2025-09-04 15:00", location: "Chicago, IL", status: "In Transit" },
+]
 };
 
-function generateFakeData(number, carrier) {
-  const checkpoints = [];
-  const now = new Date();
-  const steps = Math.floor(Math.random() * statuses.length) + 1;
+// =====================
+// TRACKER FUNCTION
+// =====================
+function trackPackage() {
+  const number = document.getElementById("trackingNumber").value.trim();
+  const carrier = document.getElementById("carrier").value;
+  const resultDiv = document.getElementById("result");
 
-  for (let i = 0; i < steps; i++) {
-    const time = new Date(now.getTime() - ((steps - i) * 24 * 60 * 60 * 1000));
-    checkpoints.push({
-      location: locations[i % locations.length],
-      time: time.toLocaleString(),
-      status: statuses[i]
-    });
+  if (number !== VALID_TRACKING_NUMBER) {
+    resultDiv.innerHTML = `<p style="color:red; font-weight:bold;">Tracking number not found.</p>`;
+    return;
   }
 
-  return {
-    tracking_number: number,
-    carrier: carrier,
-    status: statuses[steps - 1],
-    checkpoints: checkpoints,
-    steps: steps,
-    estimated_delivery: new Date(now.getTime() + 2*24*60*60*1000).toLocaleDateString()
-  };
-}
+  const data = { ...SHIPMENT_INFO, carrier: carrier };
 
-function trackPackage() {
-  const number = document.getElementById("trackingNumber").value || "ANYNUMBER";
-  const carrier = document.getElementById("carrier").value;
-  const data = generateFakeData(number, carrier);
-  const color = carrierColors[carrier] || "#007bff";
-  const logo = carrierLogos[carrier] || "";
-
-  const resultDiv = document.getElementById("result");
-  let html = `<h2><img src="${logo}" class="logo">${data.carrier} - ${data.tracking_number}</h2>`;
+  let html = `<h2>${data.carrier} - ${number}</h2>`;
+  if (data.logo) html = `<h2><img src="${data.logo}" class="logo">${data.carrier} - ${number}</h2>`;
   html += `<p><strong>Status:</strong> ${data.status}</p>`;
   html += `<p><strong>Estimated Delivery:</strong> ${data.estimated_delivery}</p>`;
 
   // Progress bar
-  html += `<div class="progress">`;
-  for (let i = 0; i < statuses.length; i++) {
-    html += `<div class="step ${i < data.steps ? 'active' : ''}" style="color:${color}"><div class="step-circle">${i+1}</div><div>${statuses[i]}</div></div>`;
-  }
+  const currentStepIndex = data.steps.indexOf(data.status);
+  html += `<div class="progress"><div class="progress-fill" id="progressFill"></div>`;
+  data.steps.forEach((step, i) => {
+    html += `<div class="step"><div class="step-circle" id="step${i}">${i+1}</div><div>${step}</div></div>`;
+  });
   html += `</div>`;
 
   // Checkpoints
@@ -102,6 +113,18 @@ function trackPackage() {
   });
 
   resultDiv.innerHTML = html;
+
+  // Animate progress
+  const progressFill = document.getElementById("progressFill");
+  const fillPercent = (currentStepIndex / (data.steps.length - 1)) * 100;
+  setTimeout(() => { progressFill.style.width = fillPercent + "%"; }, 100);
+
+  // Animate steps
+  for (let i = 0; i <= currentStepIndex; i++) {
+    setTimeout(() => {
+      document.getElementById(`step${i}`).classList.add('active');
+    }, i * 500);
+  }
 }
 </script>
 
